@@ -1,0 +1,313 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0906;
+  color: #f5f0e8;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #111009; }
+::-webkit-scrollbar-thumb { background: #3d3929; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #c9a97a; }
+
+/* ── Typography helpers ───────────────────────────────── */
+.font-editorial {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ── Gold accent line ─────────────────────────────────── */
+.gold-divider {
+  width: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, #c9a97a, transparent);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Glass card ───────────────────────────────────────── */
+.glass-card {
+  background: rgba(26, 24, 18, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 169, 122, 0.12);
+  border-radius: 12px;
+}
+
+/* ── Stat card hover ──────────────────────────────────── */
+.stat-card {
+  background: linear-gradient(135deg, #111009 0%, #1a1812 100%);
+  border: 1px solid rgba(201, 169, 122, 0.1);
+  border-radius: 12px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+}
+.stat-card:hover {
+  border-color: rgba(201, 169, 122, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* ── Sidebar nav item ─────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: rgba(245, 240, 232, 0.5);
+  transition: all 0.25s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: #c9a97a;
+  transform: scaleY(0);
+  transition: transform 0.25s ease;
+  border-radius: 0 2px 2px 0;
+}
+.nav-item:hover {
+  color: #f5f0e8;
+  background: rgba(201, 169, 122, 0.07);
+}
+.nav-item.active {
+  color: #c9a97a;
+  background: rgba(201, 169, 122, 0.1);
+}
+.nav-item.active::before {
+  transform: scaleY(1);
+}
+
+/* ── Status badges ────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.badge-available {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.badge-rented {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.badge-cleaning {
+  background: rgba(234, 179, 8, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.25);
+}
+
+/* ── Table ────────────────────────────────────────────── */
+.inventory-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.inventory-table thead th {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.35);
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(201, 169, 122, 0.1);
+}
+.inventory-table tbody tr {
+  transition: background 0.2s ease;
+}
+.inventory-table tbody tr:hover {
+  background: rgba(201, 169, 122, 0.04);
+}
+.inventory-table tbody td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.82rem;
+  vertical-align: middle;
+}
+
+/* ── Button styles ────────────────────────────────────── */
+.btn-gold {
+  background: linear-gradient(135deg, #c9a97a, #b8935a);
+  color: #0a0906;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-gold:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: rgba(245, 240, 232, 0.5);
+  padding: 0.5rem 1.1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-ghost:hover {
+  border-color: rgba(201, 169, 122, 0.35);
+  color: #c9a97a;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: rgba(245, 240, 232, 0.35);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+}
+.btn-icon:hover { color: #c9a97a; background: rgba(201, 169, 122, 0.08); }
+.btn-icon.danger:hover { color: #f87171; background: rgba(248, 113, 113, 0.08); }
+
+/* ── Modal overlay ────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  animation: fade-in 0.2s ease;
+}
+@media (min-width: 640px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 1.5rem;
+  }
+}
+.modal-panel {
+  background: #111009;
+  border: 1px solid rgba(201, 169, 122, 0.15);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (min-width: 640px) {
+  .modal-panel {
+    border-radius: 16px;
+    animation: scale-in 0.2s ease;
+  }
+}
+
+/* ── Form fields ──────────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.45);
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+.field-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  color: #f5f0e8;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  font-family: inherit;
+}
+.field-input::placeholder { color: rgba(245, 240, 232, 0.2); }
+.field-input:focus {
+  border-color: rgba(201, 169, 122, 0.5);
+  box-shadow: 0 0 0 3px rgba(201, 169, 122, 0.08);
+}
+select.field-input option { background: #1a1812; }
+
+/* ── Photo upload zone ────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed rgba(201, 169, 122, 0.2);
+  border-radius: 10px;
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(201, 169, 122, 0.03);
+}
+.upload-zone:hover {
+  border-color: rgba(201, 169, 122, 0.45);
+  background: rgba(201, 169, 122, 0.06);
+}
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 3s linear infinite; }
+
+/* ── Sidebar transition ───────────────────────────────── */
+.sidebar-enter {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sidebar-enter-open {
+  transform: translateX(0);
+}

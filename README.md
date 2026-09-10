@@ -1,20 +1,36 @@
 # Looking Elegant Atelier — Premium Suit & Shoe Rental Platform
 
-A modern, high-end web platform and Progressive Web Application (PWA) built for **Looking Elegant Atelier**, an exclusive suits and shoes rental boutique. This solution provides a luxury storefront for clients to browse and rent ceremonial attire, alongside a mobile-first **Inventory Central** dashboard for the store owner.
+A modern, high-end web platform and Progressive Web Application (PWA) built for **Looking Elegant Atelier**, an exclusive suits and shoes rental boutique. This monorepo hosts two independent applications — a luxury client storefront and a mobile-first admin dashboard for inventory management.
 
 ---
 
-## 📌 Project Overview
+## 📁 Monorepo Structure
 
-### 1. Client Storefront (Luxury Digital Atelier)
+```
+Looking_elegant/
+├── website/   ← Dev 1: Client-facing luxury storefront  (port 5173)
+└── admin/     ← Dev 2: Owner PWA dashboard              (port 5174)
+```
+
+Each application is a standalone Vite + React project with its own dependencies, configs, and dev server.
+
+---
+
+## 📌 Applications
+
+### 1. `website/` — Client Storefront (Luxury Digital Atelier)
+Owned by **Developer 1**.
+
 - **Hero & Brand Experience:** High-end visual identity showcasing luxury bespoke tailoring and footwear.
-- **The Signature Curation (Catalog):** Dynamic display of available suits, tuxedos, brogues, derbies, and loafers with pricing per day (e.g., in RWF) and rental availability.
+- **The Signature Curation (Catalog):** Dynamic display of available suits, tuxedos, brogues, derbies, and loafers with pricing per day (RWF) and rental availability.
 - **Ceremony Booking / Rental Flow:** Seamless path for clients to select looks, schedule fittings, or place rental inquiries.
 - **How It Works:** Intuitive 3-step ceremony guide (*Select Your Look*, *Book Online*, *Pick Up & Perfect*).
 - **Atelier Details:** Store location, operating hours, fitting guidelines, and contact channels.
 
-### 2. Owner Portal (Inventory Central PWA)
-- **Mobile-First PWA:** Installable directly to the owner's smartphone home screen (*"Add to Home Screen"*) with native app feel and offline caching.
+### 2. `admin/` — Owner Portal (Inventory Central PWA)
+Owned by **Developer 2**.
+
+- **Mobile-First PWA:** Installable directly to the owner's smartphone home screen with native app feel and offline caching.
 - **Live Inventory Dashboard:** Overview of all rental stock with real-time status tracking:
   - 🟢 `Available`
   - 🔵 `Rented`
@@ -65,11 +81,12 @@ create table public.items (
 
 ---
 
-## 📱 PWA Features
+## 📱 PWA Features (admin/)
 
-- **Installable Web App:** Custom `manifest.webmanifest` with icons, standalone display mode, and luxury theme colors.
+- **Installable Web App:** Custom `manifest.webmanifest` with icons, standalone display mode, and luxury theme colors (`#0a0906`).
 - **Instant Access:** One-tap launch from the phone's home screen without needing app store downloads.
 - **Responsive Layout:** Tailored controls optimized for one-handed mobile inventory management.
+- **Service Worker:** Offline caching via Workbox (Vite PWA Plugin).
 
 ---
 
@@ -77,47 +94,86 @@ create table public.items (
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18 or newer)
-- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
+- [npm](https://www.npmjs.com/)
 - Supabase account & project credentials
 
-### 1. Clone & Install Dependencies
+---
+
+### Developer 1 — Storefront (`website/`)
+
 ```bash
-git clone https://github.com/your-username/Looking_elegant.git
-cd Looking_elegant
+cd website
 npm install
+npm run dev
+# → http://localhost:5173
 ```
 
-### 2. Environment Variables Setup
-Create a `.env.local` file in the root directory:
+### Developer 2 — Admin Dashboard (`admin/`)
+
+```bash
+cd admin
+npm install
+npm run dev
+# → http://localhost:5174
+```
+
+> **Tip:** Open two terminal windows to run both apps simultaneously.
+
+---
+
+### Environment Variables
+
+Create a `.env.local` file inside **each** application folder:
+
+**`website/.env.local`**
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 3. Run Development Server
-```bash
-npm run dev
+**`admin/.env.local`**
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 4. Build for Production
+### Build for Production
+
 ```bash
-npm run build
+# Storefront
+cd website && npm run build
+
+# Admin dashboard
+cd admin && npm run build
 ```
 
 ---
 
 ## 🚢 Deployment & Domain Workflow
 
-1. **GitHub Integration:** Connect this repository to **Vercel**.
-2. **Environment Configuration:** Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to Vercel Environment Variables.
-3. **Custom Domain:**
+1. **GitHub Integration:** Connect this repository to **Vercel** with two separate Vercel projects (one per app folder).
+2. **Root Directory:** Set `website` or `admin` as the root directory for each Vercel project.
+3. **Environment Configuration:** Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to each project's Vercel Environment Variables.
+4. **Custom Domain:**
    - Link domain purchased on **Namecheap**.
    - Configure DNS records (A record / CNAME) pointing to Vercel DNS.
 
 ---
 
-## 👥 Team Collaboration Guidelines
+## 👥 Team Roles & Week 1 Status
 
+| Developer | Responsibility | Week 1 Status |
+|---|---|---|
+| **Dev 1** | Client Storefront (`website/`) | ✅ Hero, Navbar, Collection, How It Works, Footer |
+| **Dev 2** | Admin Dashboard PWA (`admin/`) | ✅ Shell layout, Stats, Inventory Table, Add Item Modal |
+| **Dev 3** | Supabase Backend & DevOps | 🔄 Schema creation, Auth setup, keys distribution |
+
+---
+
+## 📋 Team Collaboration Guidelines
+
+- Each app lives in its own folder — **do not cross-import** between `website/` and `admin/`.
 - Keep UI components modular and responsive.
 - Adhere to the luxury design language (refined typography, harmonious dark/neutral palettes, smooth micro-interactions).
-- Ensure all admin actions update Supabase database state in real-time.
+- Ensure all admin actions will update Supabase database state in real-time (Week 2).
+- Prefix `.env.local` variables with `VITE_` for Vite compatibility.
