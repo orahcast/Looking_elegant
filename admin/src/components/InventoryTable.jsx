@@ -1,76 +1,12 @@
 import { useState } from 'react'
-import { Edit2, Trash2, MoreVertical, Filter, ArrowUpDown } from 'lucide-react'
-
-// ── Static mock data (will be replaced with Supabase in Week 2) ─────────────
-const MOCK_ITEMS = [
-  {
-    id: '1',
-    name: 'Midnight Navy 3-Piece',
-    category: 'Suit',
-    size: '42R',
-    rental_price_per_day: 15000,
-    status: 'available',
-    condition_notes: 'Excellent',
-    image_url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=80&q=70',
-  },
-  {
-    id: '2',
-    name: 'Ivory Peak Tuxedo',
-    category: 'Tuxedo',
-    size: '40R',
-    rental_price_per_day: 22000,
-    status: 'rented',
-    condition_notes: 'Good',
-    image_url: 'https://images.unsplash.com/photo-1594938298603-c8148c4b5d8e?w=80&q=70',
-  },
-  {
-    id: '3',
-    name: 'Classic Oxford Brogues',
-    category: 'Shoes',
-    size: '43',
-    rental_price_per_day: 7000,
-    status: 'dry_cleaning',
-    condition_notes: 'Minor scuff on left toe',
-    image_url: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=80&q=70',
-  },
-  {
-    id: '4',
-    name: 'Charcoal Slim Fit Suit',
-    category: 'Suit',
-    size: '38R',
-    rental_price_per_day: 14000,
-    status: 'available',
-    condition_notes: 'Excellent',
-    image_url: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=80&q=70',
-  },
-  {
-    id: '5',
-    name: 'Gold Silk Pocket Square',
-    category: 'Accessory',
-    size: 'OS',
-    rental_price_per_day: 2000,
-    status: 'available',
-    condition_notes: 'Brand new',
-    image_url: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=80&q=70',
-  },
-  {
-    id: '6',
-    name: 'Onyx Double-Breasted',
-    category: 'Suit',
-    size: '44R',
-    rental_price_per_day: 18000,
-    status: 'rented',
-    condition_notes: 'Very good',
-    image_url: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=80&q=70',
-  },
-]
+import { Edit2, Trash2, Filter, ArrowUpDown, PackageOpen, Plus } from 'lucide-react'
 
 // ── Status badge helper ──────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const map = {
-    available:    { className: 'badge badge-available',  dot: '#4ade80', label: 'Available' },
-    rented:       { className: 'badge badge-rented',     dot: '#60a5fa', label: 'Rented' },
-    dry_cleaning: { className: 'badge badge-cleaning',   dot: '#facc15', label: 'Dry Cleaning' },
+    available:    { className: 'badge badge-available',  dot: '#059669', label: 'Available' },
+    rented:       { className: 'badge badge-rented',     dot: '#2563eb', label: 'Rented' },
+    dry_cleaning: { className: 'badge badge-cleaning',   dot: '#d97706', label: 'Dry Cleaning' },
   }
   const cfg = map[status] || map.available
   return (
@@ -85,29 +21,45 @@ function StatusBadge({ status }) {
 }
 
 // ── Formatters ───────────────────────────────────────────────────────────────
-const fmt = (n) => `RWF ${n.toLocaleString()}`
+const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function InventoryTable({ onAddItem }) {
+export default function InventoryTable({
+  items = [],
+  onAddItem,
+  onEditItem,
+  onDeleteItem,
+  searchQuery = '',
+}) {
   const [filter, setFilter] = useState('all')
-  const [items] = useState(MOCK_ITEMS)
 
-  const filtered = filter === 'all'
-    ? items
-    : items.filter((i) => i.status === filter)
+  // Filter by status tab & search query
+  const filtered = items.filter((i) => {
+    const matchesStatus = filter === 'all' || i.status === filter
+    const query = searchQuery.toLowerCase().trim()
+    const matchesQuery =
+      !query ||
+      i.name.toLowerCase().includes(query) ||
+      i.category.toLowerCase().includes(query) ||
+      i.size.toLowerCase().includes(query)
+    return matchesStatus && matchesQuery
+  })
 
   return (
     <div className="glass-card overflow-hidden">
       {/* Table toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-5 border-b border-white/5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-5 border-b border-[var(--border-color)]">
         <div>
-          <h2 className="text-white font-medium text-sm tracking-wide">Rental Inventory</h2>
-          <p className="text-white/30 text-[0.68rem] mt-0.5">{filtered.length} items shown</p>
+          <h2 className="text-[var(--text-main)] font-semibold text-sm tracking-wide">Rental Inventory</h2>
+          <p className="text-[var(--text-muted)] text-[0.72rem] mt-0.5">
+            {filtered.length} of {items.length} items shown
+            {searchQuery && ` · Matching "${searchQuery}"`}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Status filter pills */}
-          <div className="flex items-center gap-1.5 bg-white/3 rounded-lg p-1 border border-white/5">
+          <div className="flex items-center gap-1 bg-[var(--bg-surface-subtle)] rounded-lg p-1 border border-[var(--border-color)]">
             {[
               { key: 'all',          label: 'All' },
               { key: 'available',    label: 'Available' },
@@ -117,10 +69,10 @@ export default function InventoryTable({ onAddItem }) {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`px-2.5 py-1 rounded-md text-[0.68rem] font-medium transition-all ${
+                className={`px-3 py-1 rounded-md text-[0.72rem] font-semibold transition-all ${
                   filter === key
-                    ? 'bg-[#c9a97a] text-[#0a0906]'
-                    : 'text-white/40 hover:text-white/70'
+                    ? 'bg-[var(--bg-surface)] text-[var(--text-main)] shadow-sm border border-[var(--border-color)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 }`}
               >
                 {label}
@@ -128,113 +80,165 @@ export default function InventoryTable({ onAddItem }) {
             ))}
           </div>
 
-          <button className="btn-ghost text-[0.7rem] gap-1.5 hidden sm:inline-flex">
-            <Filter size={13} />
-            Filter
+          <button
+            onClick={onAddItem}
+            className="btn-gold text-[0.72rem] gap-1.5 hidden sm:inline-flex py-1.5 px-3"
+          >
+            <Plus size={13} />
+            Add Item
           </button>
         </div>
       </div>
 
-      {/* Desktop table */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="inventory-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>
-                <span className="flex items-center gap-1">
-                  Category <ArrowUpDown size={10} className="opacity-40" />
-                </span>
-              </th>
-              <th>Size</th>
-              <th>Price / Day</th>
-              <th>Status</th>
-              <th>Condition</th>
-              <th className="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((item) => (
-              <tr key={item.id}>
-                {/* Item with photo */}
-                <td>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                    <span className="text-white/85 font-medium text-[0.82rem]">{item.name}</span>
-                  </div>
-                </td>
-                <td className="text-white/50">{item.category}</td>
-                <td>
-                  <span className="bg-white/5 border border-white/8 text-white/60 text-[0.68rem] px-2 py-0.5 rounded font-mono">
-                    {item.size}
-                  </span>
-                </td>
-                <td className="text-[#c9a97a] font-medium font-mono text-[0.8rem]">
-                  {fmt(item.rental_price_per_day)}
-                </td>
-                <td><StatusBadge status={item.status} /></td>
-                <td className="text-white/35 text-[0.75rem]">{item.condition_notes}</td>
-                <td>
-                  <div className="flex items-center justify-end gap-1">
-                    <button className="btn-icon" aria-label={`Edit ${item.name}`} title="Edit">
-                      <Edit2 size={14} />
-                    </button>
-                    <button className="btn-icon danger" aria-label={`Delete ${item.name}`} title="Delete">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile card list */}
-      <div className="sm:hidden divide-y divide-white/5">
-        {filtered.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 p-4">
-            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
-              <img
-                src={item.image_url}
-                alt={item.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white/85 font-medium text-sm truncate">{item.name}</p>
-              <p className="text-white/35 text-[0.7rem]">
-                {item.category} · {item.size}
-              </p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <StatusBadge status={item.status} />
-                <span className="text-[#c9a97a] text-[0.72rem] font-mono font-medium">
-                  {fmt(item.rental_price_per_day)}
-                </span>
-              </div>
-            </div>
-            <button className="btn-icon flex-shrink-0" aria-label="More options">
-              <MoreVertical size={16} />
-            </button>
+      {/* Empty State */}
+      {filtered.length === 0 ? (
+        <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
+          <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface-subtle)] flex items-center justify-center text-[var(--text-subtle)] mb-3">
+            <PackageOpen size={24} />
           </div>
-        ))}
-      </div>
+          <p className="text-[var(--text-main)] font-semibold text-sm">No items found</p>
+          <p className="text-[var(--text-muted)] text-xs mt-1 max-w-sm">
+            {searchQuery
+              ? `No inventory items match "${searchQuery}". Try a different keyword.`
+              : 'No items currently match this status filter.'}
+          </p>
+          {searchQuery && (
+            <button
+              onClick={onAddItem}
+              className="btn-ghost text-xs mt-4"
+            >
+              Add New Item Instead
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Size</th>
+                  <th>Price / Day</th>
+                  <th>Status</th>
+                  <th>Condition</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item) => (
+                  <tr key={item.id}>
+                    {/* Item with photo */}
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-surface-subtle)] border border-[var(--border-color)]">
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <span className="text-[var(--text-main)] font-semibold text-[0.84rem]">{item.name}</span>
+                      </div>
+                    </td>
+                    <td className="text-[var(--text-muted)]">{item.category}</td>
+                    <td>
+                      <span className="bg-[var(--bg-surface-subtle)] border border-[var(--border-color)] text-[var(--text-muted)] text-[0.7rem] px-2 py-0.5 rounded font-mono font-semibold">
+                        {item.size}
+                      </span>
+                    </td>
+                    <td className="text-[var(--gold-text)] font-bold font-mono text-[0.82rem]">
+                      {fmt(item.rental_price_per_day)}
+                    </td>
+                    <td><StatusBadge status={item.status} /></td>
+                    <td className="text-[var(--text-muted)] text-[0.78rem] truncate max-w-[160px]">
+                      {item.condition_notes || '—'}
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          className="btn-icon"
+                          onClick={() => onEditItem(item)}
+                          aria-label={`Edit ${item.name}`}
+                          title="Edit"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          className="btn-icon danger"
+                          onClick={() => onDeleteItem(item)}
+                          aria-label={`Delete ${item.name}`}
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden divide-y divide-[var(--border-color)]">
+            {filtered.map((item) => (
+              <div key={item.id} className="flex items-center gap-3 p-4">
+                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-surface-subtle)] border border-[var(--border-color)]">
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[var(--text-main)] font-semibold text-sm truncate">{item.name}</p>
+                  <p className="text-[var(--text-muted)] text-[0.72rem]">
+                    {item.category} · {item.size}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <StatusBadge status={item.status} />
+                    <span className="text-[var(--gold-text)] text-[0.75rem] font-mono font-bold">
+                      {fmt(item.rental_price_per_day)}
+                    </span>
+                  </div>
+                </div>
+                {/* Mobile action buttons */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    className="btn-icon"
+                    onClick={() => onEditItem(item)}
+                    aria-label={`Edit ${item.name}`}
+                    title="Edit"
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                  <button
+                    className="btn-icon danger"
+                    onClick={() => onDeleteItem(item)}
+                    aria-label={`Delete ${item.name}`}
+                    title="Delete"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between">
-        <p className="text-white/25 text-[0.65rem]">
+      <div className="px-5 py-3 border-t border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-surface-subtle)]/50">
+        <p className="text-[var(--text-muted)] text-[0.7rem] font-medium">
           Showing {filtered.length} of {items.length} items
         </p>
-        <p className="text-white/20 text-[0.62rem] italic">
-          Live data — Week 2
+        <p className="text-[var(--text-subtle)] text-[0.68rem] italic">
+          Looking Elegant Atelier Inventory
         </p>
       </div>
     </div>
