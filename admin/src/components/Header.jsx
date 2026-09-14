@@ -1,27 +1,32 @@
 import { Menu, Bell, Search, RefreshCw, Sun, Moon } from 'lucide-react'
 
 const pageTitles = {
-  dashboard: { title: 'Dashboard', subtitle: "Welcome back — here’s your inventory at a glance." },
+  dashboard: { title: 'Dashboard', subtitle: "Welcome back — here's your boutique overview at a glance." },
+  orders:    { title: 'Web Orders', subtitle: 'Manage online rental orders, chosen outfits and delivery statuses.' },
+  clients:   { title: 'Client Book', subtitle: 'Digital on-site register for walk-in boutique clients and fittings.' },
   inventory: { title: 'Inventory', subtitle: 'Manage your full rental catalog in real time.' },
   settings:  { title: 'Settings',  subtitle: 'Configure your store preferences.' },
 }
 
 export default function Header({
-  activeSection,
+  activeSection = 'dashboard',
   onMenuToggle,
+  onOpenSidebar,
   isDark,
   onToggleTheme,
   searchQuery = '',
   onSearchChange,
 }) {
+  const handleToggle = onMenuToggle || onOpenSidebar || (() => {})
   const { title, subtitle } = pageTitles[activeSection] || pageTitles.dashboard
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-4 px-4 sm:px-6 py-3.5 bg-[var(--bg-surface)] backdrop-blur-md border-b border-[var(--border-color)] transition-colors duration-200">
       {/* Mobile hamburger */}
       <button
-        className="lg:hidden text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors p-1.5 -ml-1"
-        onClick={onMenuToggle}
+        type="button"
+        className="lg:hidden text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors p-1.5 -ml-1 cursor-pointer"
+        onClick={handleToggle}
         aria-label="Toggle sidebar"
       >
         <Menu size={20} />
@@ -46,7 +51,7 @@ export default function Header({
           />
           <input
             type="search"
-            placeholder="Search inventory…"
+            placeholder="Search inventory, clients, orders..."
             id="inventory-search"
             value={searchQuery}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
@@ -59,6 +64,7 @@ export default function Header({
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Theme Toggle Button (Light / Dark Mode) */}
         <button
+          type="button"
           onClick={onToggleTheme}
           className="p-2 rounded-lg bg-[var(--bg-surface-subtle)] border border-[var(--border-color)] text-[var(--text-main)] hover:border-[var(--gold-primary)] transition-all active:scale-95 flex items-center justify-center cursor-pointer shadow-sm"
           aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -73,7 +79,9 @@ export default function Header({
 
         {/* Refresh */}
         <button
-          className="btn-icon"
+          type="button"
+          onClick={() => window.location.reload()}
+          className="btn-icon cursor-pointer"
           aria-label="Refresh data"
           title="Refresh"
         >
@@ -82,7 +90,8 @@ export default function Header({
 
         {/* Notifications */}
         <button
-          className="btn-icon relative"
+          type="button"
+          className="btn-icon relative cursor-pointer"
           aria-label="Notifications"
           title="Notifications"
         >

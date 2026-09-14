@@ -5,29 +5,14 @@ import DashboardStats from './components/DashboardStats'
 import InventoryTable from './components/InventoryTable'
 import AddItemModal from './components/AddItemModal'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
+import OrdersSection from './components/OrdersSection'
+import ClientsSection from './components/ClientsSection'
 import { INITIAL_ITEMS } from './data/initialItems'
-import { Plus, BarChart3, Package, Sparkles } from 'lucide-react'
+import { INITIAL_ORDERS } from './data/initialOrders'
+import { INITIAL_CLIENTS } from './data/initialClients'
+import { Plus, Sparkles } from 'lucide-react'
 
-// ── Quick-action card for Dashboard overview ─────────────────────────────────
-function QuickAction({ icon: Icon, label, sub, color, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="glass-card p-4 text-left hover:border-[var(--gold-primary)] transition-all duration-200 hover:-translate-y-0.5 active:scale-95 w-full group cursor-pointer"
-    >
-      <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-transform group-hover:scale-105"
-        style={{ background: `${color}18` }}
-      >
-        <Icon size={17} style={{ color }} strokeWidth={2} />
-      </div>
-      <p className="text-[var(--text-main)] text-sm font-semibold leading-tight">{label}</p>
-      <p className="text-[var(--text-muted)] text-[0.72rem] mt-0.5">{sub}</p>
-    </button>
-  )
-}
-
-// ── Main App ─────────────────────────────────────────────────────────────────
+// ─── Main App ──────────────────────────────────────────────────────
 export default function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -54,25 +39,60 @@ export default function App() {
     localStorage.setItem('looking_elegant_inventory', JSON.stringify(items))
   }, [items])
 
-  // Theme state: persisted in localStorage
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('looking_elegant_admin_theme')
-    return saved === 'dark'
+  // Orders state with localStorage persistence
+  const [orders, setOrders] = useState(() => {
+    const saved = localStorage.getItem('looking_elegant_orders')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch (e) {
+        console.error('Failed to parse saved orders', e)
+      }
+    }
+    return INITIAL_ORDERS
   })
 
   useEffect(() => {
-    if (isDark) {
+    localStorage.setItem('looking_elegant_orders', JSON.stringify(orders))
+  }, [orders])
+
+  // Clients state (physical notebook replacement) with localStorage persistence
+  const [clients, setClients] = useState(() => {
+    const saved = localStorage.getItem('looking_elegant_clients')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch (e) {
+        console.error('Failed to parse saved clients', e)
+      }
+    }
+    return INITIAL_CLIENTS
+  })
+
+  useEffect(() => {
+    localStorage.setItem('looking_elegant_clients', JSON.stringify(clients))
+  }, [clients])
+
+  // Theme state
+  const [isDark, setIsDark] = useState(() => {
+    return document.documentElement.classList.contains('dark')
+  })
+
+  const toggleTheme = () => {
+    const next = !isDark
+    setIsDark(next)
+    if (next) {
       document.documentElement.classList.add('dark')
-      localStorage.setItem('looking_elegant_admin_theme', 'dark')
+      localStorage.setItem('looking_elegant_theme', 'dark')
     } else {
       document.documentElement.classList.remove('dark')
-      localStorage.setItem('looking_elegant_admin_theme', 'light')
+      localStorage.setItem('looking_elegant_theme', 'light')
     }
-  }, [isDark])
+  }
 
-  const toggleTheme = () => setIsDark((prev) => !prev)
-
-  // Handlers for Add, Edit, Delete
+  // Inventory item CRUD
   const handleOpenAdd = () => {
     setItemToEdit(null)
     setModalOpen(true)
@@ -83,44 +103,80 @@ export default function App() {
     setModalOpen(true)
   }
 
-  const handleSaveItem = (itemData) => {
-    if (itemData.id) {
-      // Edit existing item
+  const handleSaveItem = (savedItem) => {
+    if (itemToEdit) {
       setItems((prev) =>
-        prev.map((item) => (item.id === itemData.id ? { ...item, ...itemData } : item))
+        prev.map((i) => (i.id === savedItem.id ? savedItem : i))
       )
     } else {
-      // Add new item with unique id
-      const newItem = {
-        ...itemData,
-        id: String(Date.now()),
-      }
-      setItems((prev) => [newItem, ...prev])
+      setItems((prev) => [savedItem, ...prev])
     }
+    setModalOpen(false)
+    setItemToEdit(null)
   }
 
   const handleDeleteItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
+    setItems((prev) => prev.filter((i) => i.id !== id))
     setItemToDelete(null)
   }
 
+  // Web Orders CRUD
+  const handleAddOrder = (newOrder) => {
+    setOrders((prev) => [newOrder, ...prev])
+  }
+
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus } : o))
+    )
+  }
+
+  const handleDeleteOrder = (orderId) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId))
+  }
+
+  // Client Book CRUD
+  const handleAddClient = (newClient) => {
+    setClients((prev) => [newClient, ...prev])
+  }
+
+  const handleUpdateClient = (clientId, updatedFields) => {
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientId ? { ...c, ...updatedFields } : c))
+    )
+  }
+
+  const handleDeleteClient = (clientId) => {
+    setClients((prev) => prev.filter((c) => c.id !== clientId))
+  }
+
+  const pendingOrdersCount = orders.filter((o) => o.order_status === 'pending').length
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-200">
+    <div className="flex h-screen overflow-hidden bg-[var(--bg-app)]">
       {/* Sidebar */}
       <Sidebar
         activeSection={activeSection}
         onNavigate={setActiveSection}
+        onSelectSection={setActiveSection}
         isOpen={sidebarOpen}
+        sidebarOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onCloseSidebar={() => setSidebarOpen(false)}
+        pendingOrdersCount={pendingOrdersCount}
+        ordersCount={pendingOrdersCount}
+        totalClientsCount={clients.length}
+        clientsCount={clients.length}
         totalItems={items.length}
       />
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header with search & dark mode toggle */}
+      {/* Main content wrapper */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Top bar */}
         <Header
           activeSection={activeSection}
           onMenuToggle={() => setSidebarOpen(true)}
+          onOpenSidebar={() => setSidebarOpen(true)}
           isDark={isDark}
           onToggleTheme={toggleTheme}
           searchQuery={searchQuery}
@@ -130,7 +186,7 @@ export default function App() {
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-[var(--bg-app)]">
 
-          {/* ── Dashboard section ─────────────────────────────── */}
+          {/* ─── Dashboard section ────────────────────────────────────────── */}
           {activeSection === 'dashboard' && (
             <>
               {/* Page heading */}
@@ -138,7 +194,7 @@ export default function App() {
                 <div>
                   <div className="gold-divider" />
                   <h1 className="font-editorial text-[var(--text-main)] text-2xl sm:text-3xl font-light tracking-wide">
-                    Inventory Overview
+                    Boutique Overview
                   </h1>
                   <p className="text-[var(--text-muted)] text-[0.78rem] mt-1 tracking-wide font-medium">
                     {new Date().toLocaleDateString('en-RW', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -157,37 +213,7 @@ export default function App() {
               {/* Dynamic Stats */}
               <DashboardStats items={items} />
 
-              {/* Quick actions */}
-              <div>
-                <h2 className="text-[var(--text-subtle)] text-[0.68rem] uppercase tracking-widest mb-3 font-bold">
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <QuickAction
-                    icon={Plus}
-                    label="Add New Item"
-                    sub="List a new rental piece"
-                    color="#b8935a"
-                    onClick={handleOpenAdd}
-                  />
-                  <QuickAction
-                    icon={Package}
-                    label="View Inventory"
-                    sub={`Browse all ${items.length} items`}
-                    color="#2563eb"
-                    onClick={() => setActiveSection('inventory')}
-                  />
-                  <QuickAction
-                    icon={BarChart3}
-                    label="Reports"
-                    sub="Coming in Week 3"
-                    color="#7c3aed"
-                    onClick={() => {}}
-                  />
-                </div>
-              </div>
-
-              {/* Recent inventory preview with functional actions */}
+              {/* Recent inventory preview */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-[var(--text-subtle)] text-[0.68rem] uppercase tracking-widest font-bold">
@@ -211,7 +237,33 @@ export default function App() {
             </>
           )}
 
-          {/* ── Inventory section ──────────────────────────────── */}
+          {/* ─── Web Orders section (Section 1 requested) ────────────────── */}
+          {activeSection === 'orders' && (
+            <OrdersSection
+              orders={orders}
+              inventoryItems={items}
+              onAddOrder={handleAddOrder}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onDeleteOrder={handleDeleteOrder}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          )}
+
+          {/* ─── Client Register Book (Section 2 requested) ──────────────── */}
+          {activeSection === 'clients' && (
+            <ClientsSection
+              clients={clients}
+              inventoryItems={items}
+              onAddClient={handleAddClient}
+              onUpdateClient={handleUpdateClient}
+              onDeleteClient={handleDeleteClient}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          )}
+
+          {/* ─── Inventory section ────────────────────────────────────────── */}
           {activeSection === 'inventory' && (
             <>
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
@@ -243,7 +295,7 @@ export default function App() {
             </>
           )}
 
-          {/* ── Settings placeholder ───────────────────────────── */}
+          {/* ─── Settings placeholder ────────────────────────────────────── */}
           {activeSection === 'settings' && (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-[var(--gold-badge-bg)] border border-[var(--gold-badge-border)] flex items-center justify-center">
