@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, Upload, ImagePlus, Loader2, Check } from 'lucide-react'
+import { X, ImagePlus, Loader2, Check, Upload, AlertCircle } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 const CATEGORIES = ['Suit', 'Tuxedo', 'Shoes', 'Accessory']
 const STATUSES = [
@@ -7,6 +8,13 @@ const STATUSES = [
   { value: 'rented',       label: '🔵  Rented' },
   { value: 'dry_cleaning', label: '🟡  At Dry Cleaning' },
 ]
+
+const FALLBACK_IMAGES = {
+  Suit: 'https://images.unsplash.com/photo-1594938298603-c8148c4b5d8e?w=400&q=80',
+  Tuxedo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80',
+  Shoes: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=400&q=80',
+  Accessory: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&q=80',
+}
 
 const DEFAULT_FORM = {
   name: '',
@@ -24,6 +32,9 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
   const [photoPreview, setPhotoPreview] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   useEffect(() => {
     if (itemToEdit) {
@@ -47,15 +58,64 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }))
 
-  const handlePhotoChange = (file) => {
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = e.target.result
-      setPhotoPreview(dataUrl)
-      set('image_url', dataUrl)
+  // ── Upload photo to Supabase Storage ──────────────────────────────────────
+  const uploadImageToStorage = async (file) => {
+    setUploading(true)
+    setUploadError(null)
+    setUploadProgress(0)
+
+    try {
+      const ext = file.name.split('.').pop().toLowerCase()
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filename, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        })
+
+      if (uploadError) throw uploadError
+
+      setUploadProgress(80)
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filename)
+
+      setUploadProgress(100)
+      return publicUrl
+    } finally {
+      setUploading(false)
     }
+  }
+
+  const handlePhotoChange = async (file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file (JPG, PNG, WebP).')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image must be under 5 MB.')
+      return
+    }
+
+    // Show local preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => setPhotoPreview(e.target.result)
     reader.readAsDataURL(file)
+
+    // Upload to Supabase Storage
+    try {
+      const publicUrl = await uploadImageToStorage(file)
+      set('image_url', publicUrl)
+      setPhotoPreview(publicUrl)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      setUploadError(err.message || 'Upload failed. The image preview is shown but may not save correctly.')
+    }
   }
 
   const handleDrop = (e) => {
@@ -65,33 +125,23 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
     if (file?.type.startsWith('image/')) handlePhotoChange(file)
   }
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault()
+    if (uploading) return // wait for upload to finish
     setSaving(true)
-
-    // Default fallback image if none provided
-    const fallbackImages = {
-      Suit: 'https://images.unsplash.com/photo-1594938298603-c8148c4b5d8e?w=120&q=80',
-      Tuxedo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=120&q=80',
-      Shoes: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=120&q=80',
-      Accessory: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=120&q=80',
-    }
 
     const finalData = {
       ...form,
       rental_price_per_day: Number(form.rental_price_per_day) || 0,
-      image_url: form.image_url || photoPreview || fallbackImages[form.category] || fallbackImages.Suit,
+      image_url: form.image_url || FALLBACK_IMAGES[form.category] || FALLBACK_IMAGES.Suit,
     }
 
     if (isEditing) {
       finalData.id = itemToEdit.id
     }
 
-    setTimeout(() => {
-      onSave(finalData)
-      setSaving(false)
-      onClose()
-    }, 400)
+    await onSave(finalData)
+    setSaving(false)
   }
 
   return (
@@ -126,11 +176,12 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              onClick={() => document.getElementById('photo-input').click()}
+              onClick={() => !uploading && document.getElementById('photo-input').click()}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && document.getElementById('photo-input').click()}
+              onKeyDown={(e) => e.key === 'Enter' && !uploading && document.getElementById('photo-input').click()}
               aria-label="Upload photo"
+              style={{ cursor: uploading ? 'wait' : 'pointer' }}
             >
               <input
                 id="photo-input"
@@ -138,8 +189,22 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
                 accept="image/*"
                 className="hidden"
                 onChange={(e) => handlePhotoChange(e.target.files[0])}
+                disabled={uploading}
               />
-              {photoPreview ? (
+
+              {uploading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 size={28} className="animate-spin text-[var(--gold-text)]" />
+                  <p className="text-[var(--text-main)] text-[0.82rem] font-medium">Uploading to cloud…</p>
+                  <div className="w-32 h-1.5 bg-[var(--bg-surface-subtle)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--gold-primary)] rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[var(--text-muted)] text-[0.68rem]">{uploadProgress}%</p>
+                </div>
+              ) : photoPreview ? (
                 <div className="flex flex-col items-center gap-2">
                   <img
                     src={photoPreview}
@@ -147,6 +212,11 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
                     className="w-24 h-24 object-cover rounded-lg border border-[var(--border-color)] shadow-sm"
                   />
                   <p className="text-[var(--gold-text)] text-[0.72rem] font-semibold">Click to change photo</p>
+                  {form.image_url && form.image_url.startsWith('https://') && (
+                    <p className="text-emerald-600 dark:text-emerald-400 text-[0.65rem] flex items-center gap-1">
+                      <Check size={10} /> Saved to cloud storage
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
@@ -158,12 +228,20 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
                       Drag & drop or <span className="text-[var(--gold-text)] font-bold underline">browse</span>
                     </p>
                     <p className="text-[var(--text-muted)] text-[0.7rem] mt-0.5">
-                      JPG, PNG or WebP · Max 5 MB
+                      JPG, PNG or WebP · Max 5 MB · Saved to Supabase Storage
                     </p>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Upload error */}
+            {uploadError && (
+              <div className="flex items-start gap-2 mt-2 text-red-600 dark:text-red-400">
+                <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
+                <p className="text-[0.72rem]">{uploadError}</p>
+              </div>
+            )}
           </div>
 
           {/* Name */}
@@ -260,19 +338,24 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
               type="button"
               className="btn-ghost flex-1 justify-center"
               onClick={onClose}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn-gold flex-1 justify-center"
-              disabled={saving}
+              disabled={saving || uploading}
             >
               {saving ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
                   Saving…
+                </>
+              ) : uploading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Uploading…
                 </>
               ) : isEditing ? (
                 <>

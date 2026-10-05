@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Edit2, Trash2, Filter, ArrowUpDown, PackageOpen, Plus } from 'lucide-react'
+import { Edit2, Trash2, PackageOpen, Plus } from 'lucide-react'
 
 // ── Status badge helper ──────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -20,6 +20,22 @@ function StatusBadge({ status }) {
   )
 }
 
+// ── Inline status selector ───────────────────────────────────────────────────
+function StatusSelect({ status, onStatusChange }) {
+  return (
+    <select
+      value={status}
+      onChange={e => onStatusChange(e.target.value)}
+      className="text-[0.7rem] font-semibold rounded-lg border border-[var(--border-color)] bg-[var(--bg-app)] text-[var(--text-main)] px-2 py-1 focus:outline-none focus:border-[var(--gold-primary)] cursor-pointer transition-colors hover:border-[var(--gold-primary)]/60"
+      title="Change item status"
+    >
+      <option value="available">🟢 Available</option>
+      <option value="rented">🔵 Rented</option>
+      <option value="dry_cleaning">🟡 Dry Cleaning</option>
+    </select>
+  )
+}
+
 // ── Formatters ───────────────────────────────────────────────────────────────
 const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`
 
@@ -29,6 +45,7 @@ export default function InventoryTable({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onStatusChange,
   searchQuery = '',
 }) {
   const [filter, setFilter] = useState('all')
@@ -153,7 +170,16 @@ export default function InventoryTable({
                     <td className="text-[var(--gold-text)] font-bold font-mono text-[0.82rem]">
                       {fmt(item.rental_price_per_day)}
                     </td>
-                    <td><StatusBadge status={item.status} /></td>
+                    <td>
+                      {onStatusChange ? (
+                        <StatusSelect
+                          status={item.status}
+                          onStatusChange={(newStatus) => onStatusChange(item.id, newStatus)}
+                        />
+                      ) : (
+                        <StatusBadge status={item.status} />
+                      )}
+                    </td>
                     <td className="text-[var(--text-muted)] text-[0.78rem] truncate max-w-[160px]">
                       {item.condition_notes || '—'}
                     </td>
@@ -201,7 +227,14 @@ export default function InventoryTable({
                     {item.category} · {item.size}
                   </p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <StatusBadge status={item.status} />
+                    {onStatusChange ? (
+                      <StatusSelect
+                        status={item.status}
+                        onStatusChange={(newStatus) => onStatusChange(item.id, newStatus)}
+                      />
+                    ) : (
+                      <StatusBadge status={item.status} />
+                    )}
                     <span className="text-[var(--gold-text)] text-[0.75rem] font-mono font-bold">
                       {fmt(item.rental_price_per_day)}
                     </span>

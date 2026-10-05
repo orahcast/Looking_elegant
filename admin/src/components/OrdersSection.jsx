@@ -62,11 +62,12 @@ export default function OrdersSection({
   })
 
   // KPI calculations
-  const totalOrders = orders.length
+  const totalOrders   = orders.length
   const pendingOrders = orders.filter(o => o.order_status === 'pending').length
   const activeRentals = orders.filter(o => o.order_status === 'confirmed' || o.order_status === 'delivered').length
-  const totalRevenue = orders
-    .filter(o => o.order_status !== 'cancelled')
+  // Only count revenue from orders that have been confirmed/delivered/completed
+  const totalRevenue  = orders
+    .filter(o => ['confirmed', 'delivered', 'completed'].includes(o.order_status))
     .reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0)
 
   // Item row operations
@@ -279,7 +280,7 @@ export default function OrdersSection({
             <ChevronRight size={15} className="text-gray-400 dark:text-[var(--text-muted)] opacity-60" />
           </div>
           <div className="flex items-center justify-between w-full mt-1">
-            <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-[var(--text-main)] truncate">Total Value</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-[var(--text-main)] truncate">Confirmed Revenue</span>
             <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 truncate ml-1">{formatRWF(totalRevenue)}</span>
           </div>
         </button>

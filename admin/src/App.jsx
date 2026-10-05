@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import DashboardStats from './components/DashboardStats'
@@ -7,13 +7,24 @@ import AddItemModal from './components/AddItemModal'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
 import OrdersSection from './components/OrdersSection'
 import ClientsSection from './components/ClientsSection'
-import { INITIAL_ITEMS } from './data/initialItems'
-import { INITIAL_ORDERS } from './data/initialOrders'
-import { INITIAL_CLIENTS } from './data/initialClients'
-import { Plus, Sparkles } from 'lucide-react'
+import Login from './pages/Login'
+import { useAuth } from './hooks/useAuth'
+import { useInventory } from './hooks/useInventory'
+import { useOrders } from './hooks/useOrders'
+import { useClients } from './hooks/useClients'
+import { Plus, Sparkles, Loader2 } from 'lucide-react'
 
 // ─── Main App ──────────────────────────────────────────────────────
 export default function App() {
+  // ── Auth ────────────────────────────────────────────────────────
+  const { session, loading: authLoading, signIn, signOut } = useAuth()
+
+  // ── Data hooks (Supabase-backed) ────────────────────────────────
+  const { items, addItem, updateItem, deleteItem } = useInventory()
+  const { orders, addOrder, updateOrderStatus, deleteOrder } = useOrders()
+  const { clients, addClient, updateClient, deleteClient } = useClients()
+
+  // ── UI state ────────────────────────────────────────────────────
   const [activeSection, setActiveSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -21,65 +32,10 @@ export default function App() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Inventory state with localStorage persistence
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('looking_elegant_inventory')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      } catch (e) {
-        console.error('Failed to parse saved inventory', e)
-      }
-    }
-    return INITIAL_ITEMS
-  })
-
-  useEffect(() => {
-    localStorage.setItem('looking_elegant_inventory', JSON.stringify(items))
-  }, [items])
-
-  // Orders state with localStorage persistence
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('looking_elegant_orders')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      } catch (e) {
-        console.error('Failed to parse saved orders', e)
-      }
-    }
-    return INITIAL_ORDERS
-  })
-
-  useEffect(() => {
-    localStorage.setItem('looking_elegant_orders', JSON.stringify(orders))
-  }, [orders])
-
-  // Clients state (physical notebook replacement) with localStorage persistence
-  const [clients, setClients] = useState(() => {
-    const saved = localStorage.getItem('looking_elegant_clients')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      } catch (e) {
-        console.error('Failed to parse saved clients', e)
-      }
-    }
-    return INITIAL_CLIENTS
-  })
-
-  useEffect(() => {
-    localStorage.setItem('looking_elegant_clients', JSON.stringify(clients))
-  }, [clients])
-
-  // Theme state
-  const [isDark, setIsDark] = useState(() => {
-    return document.documentElement.classList.contains('dark')
-  })
-
+  // Theme state (localStorage is fine here — it's a UI preference only)
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const toggleTheme = () => {
     const next = !isDark
     setIsDark(next)
@@ -92,7 +48,23 @@ export default function App() {
     }
   }
 
-  // Inventory item CRUD
+  // ── Auth guard: show loading spinner or login page ──────────────
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[var(--bg-app)]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 size={28} className="animate-spin text-[var(--gold-text)]" />
+          <p className="text-[var(--text-muted)] text-sm">Loading dashboard…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <Login onSignIn={signIn} />
+  }
+
+  // ── Inventory CRUD handlers ─────────────────────────────────────
   const handleOpenAdd = () => {
     setItemToEdit(null)
     setModalOpen(true)
@@ -103,51 +75,88 @@ export default function App() {
     setModalOpen(true)
   }
 
-  const handleSaveItem = (savedItem) => {
-    if (itemToEdit) {
-      setItems((prev) =>
-        prev.map((i) => (i.id === savedItem.id ? savedItem : i))
-      )
-    } else {
-      setItems((prev) => [savedItem, ...prev])
+  const handleSaveItem = async (savedItem) => {
+    try {
+      if (itemToEdit) {
+        await updateItem(savedItem.id, savedItem)
+      } else {
+        await addItem(savedItem)
+      }
+      setModalOpen(false)
+      setItemToEdit(null)
+    } catch (err) {
+      console.error('Save item error:', err)
+      alert('Failed to save item: ' + err.message)
     }
-    setModalOpen(false)
-    setItemToEdit(null)
   }
 
-  const handleDeleteItem = (id) => {
-    setItems((prev) => prev.filter((i) => i.id !== id))
-    setItemToDelete(null)
+  const handleDeleteItem = async (id) => {
+    try {
+      await deleteItem(id)
+      setItemToDelete(null)
+    } catch (err) {
+      console.error('Delete item error:', err)
+      alert('Failed to delete item: ' + err.message)
+    }
   }
 
-  // Web Orders CRUD
-  const handleAddOrder = (newOrder) => {
-    setOrders((prev) => [newOrder, ...prev])
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateItem(id, { status: newStatus })
+    } catch (err) {
+      console.error('Status change error:', err)
+      alert('Failed to update status: ' + err.message)
+    }
   }
 
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus } : o))
-    )
+  // ── Orders CRUD handlers ────────────────────────────────────────
+  const handleAddOrder = async (newOrder) => {
+    try {
+      await addOrder(newOrder)
+    } catch (err) {
+      console.error('Add order error:', err)
+    }
   }
 
-  const handleDeleteOrder = (orderId) => {
-    setOrders((prev) => prev.filter((o) => o.id !== orderId))
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus)
+    } catch (err) {
+      console.error('Update order status error:', err)
+    }
   }
 
-  // Client Book CRUD
-  const handleAddClient = (newClient) => {
-    setClients((prev) => [newClient, ...prev])
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      await deleteOrder(orderId)
+    } catch (err) {
+      console.error('Delete order error:', err)
+    }
   }
 
-  const handleUpdateClient = (clientId, updatedFields) => {
-    setClients((prev) =>
-      prev.map((c) => (c.id === clientId ? { ...c, ...updatedFields } : c))
-    )
+  // ── Client Book CRUD handlers ───────────────────────────────────
+  const handleAddClient = async (newClient) => {
+    try {
+      await addClient(newClient)
+    } catch (err) {
+      console.error('Add client error:', err)
+    }
   }
 
-  const handleDeleteClient = (clientId) => {
-    setClients((prev) => prev.filter((c) => c.id !== clientId))
+  const handleUpdateClient = async (clientId, updatedFields) => {
+    try {
+      await updateClient(clientId, updatedFields)
+    } catch (err) {
+      console.error('Update client error:', err)
+    }
+  }
+
+  const handleDeleteClient = async (clientId) => {
+    try {
+      await deleteClient(clientId)
+    } catch (err) {
+      console.error('Delete client error:', err)
+    }
   }
 
   const pendingOrdersCount = orders.filter((o) => o.order_status === 'pending').length
@@ -168,6 +177,7 @@ export default function App() {
         totalClientsCount={clients.length}
         clientsCount={clients.length}
         totalItems={items.length}
+        onSignOut={signOut}
       />
 
       {/* Main content wrapper */}
@@ -186,7 +196,7 @@ export default function App() {
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-[var(--bg-app)]">
 
-          {/* ─── Dashboard section ────────────────────────────────────────── */}
+          {/* ─── Dashboard section ─────────────────────────────────────── */}
           {activeSection === 'dashboard' && (
             <>
               {/* Page heading */}
@@ -211,7 +221,7 @@ export default function App() {
               </div>
 
               {/* Dynamic Stats */}
-              <DashboardStats items={items} />
+              <DashboardStats items={items} orders={orders} />
 
               {/* Recent inventory preview */}
               <div>
@@ -231,13 +241,14 @@ export default function App() {
                   onAddItem={handleOpenAdd}
                   onEditItem={handleOpenEdit}
                   onDeleteItem={setItemToDelete}
+                  onStatusChange={handleStatusChange}
                   searchQuery={searchQuery}
                 />
               </div>
             </>
           )}
 
-          {/* ─── Web Orders section (Section 1 requested) ────────────────── */}
+          {/* ─── Web Orders section ────────────────────────────────────── */}
           {activeSection === 'orders' && (
             <OrdersSection
               orders={orders}
@@ -250,7 +261,7 @@ export default function App() {
             />
           )}
 
-          {/* ─── Client Register Book (Section 2 requested) ──────────────── */}
+          {/* ─── Client Register Book ──────────────────────────────────── */}
           {activeSection === 'clients' && (
             <ClientsSection
               clients={clients}
@@ -263,7 +274,7 @@ export default function App() {
             />
           )}
 
-          {/* ─── Inventory section ────────────────────────────────────────── */}
+          {/* ─── Inventory section ─────────────────────────────────────── */}
           {activeSection === 'inventory' && (
             <>
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
@@ -290,12 +301,13 @@ export default function App() {
                 onAddItem={handleOpenAdd}
                 onEditItem={handleOpenEdit}
                 onDeleteItem={setItemToDelete}
+                onStatusChange={handleStatusChange}
                 searchQuery={searchQuery}
               />
             </>
           )}
 
-          {/* ─── Settings placeholder ────────────────────────────────────── */}
+          {/* ─── Settings placeholder ──────────────────────────────────── */}
           {activeSection === 'settings' && (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-[var(--gold-badge-bg)] border border-[var(--gold-badge-border)] flex items-center justify-center">

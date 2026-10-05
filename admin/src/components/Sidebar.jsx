@@ -23,7 +23,8 @@ export default function Sidebar({
   pendingOrdersCount,
   ordersCount = 0,
   totalClientsCount,
-  clientsCount = 0
+  clientsCount = 0,
+  onSignOut,
 }) {
   const handleNavigate = onNavigate || onSelectSection || (() => {})
   const handleClose = onClose || onCloseSidebar || (() => {})
@@ -145,7 +146,7 @@ export default function Sidebar({
           </div>
           <button 
             type="button" 
-            onClick={() => alert('Signed out successfully.')}
+            onClick={() => onSignOut ? onSignOut() : alert('Signed out successfully.')}
             className="nav-item w-full text-left hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 group cursor-pointer"
           >
             <LogOut size={15} strokeWidth={1.8} className="group-hover:text-red-600 dark:group-hover:text-red-400 text-[var(--text-muted)]" />
