@@ -116,20 +116,29 @@ body {
 .product-card {
   background: #fff;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 50px rgba(0,0,0,0.12);
 }
-.product-card img {
+.product-card .card-image-wrap {
   width: 100%;
-  height: 320px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: #f2eee6;
+  position: relative;
+}
+.product-card .card-image-wrap img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
   transition: transform 0.6s ease;
 }
-.product-card:hover img { transform: scale(1.04); }
+.product-card:hover .card-image-wrap img { transform: scale(1.05); }
 
 /* ── Process card ────────────────────────────────────── */
 .process-card {

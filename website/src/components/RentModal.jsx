@@ -71,18 +71,26 @@ export default function RentModal({ item, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(10,9,6,0.75)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain flex min-h-[100dvh] items-center justify-center p-3 sm:p-4"
+      style={{
+        background: 'rgba(10,9,6,0.75)',
+        backdropFilter: 'blur(4px)',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-md rounded-sm shadow-2xl overflow-hidden"
+        className="bg-white w-full max-w-md my-auto rounded-sm shadow-2xl flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[min(90dvh,720px)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: 'fadeInScale 0.3s ease' }}
       >
         {/* ── Success state ──────────────────────────────────────────── */}
         {submitted ? (
-          <div className="px-6 py-10 flex flex-col items-center text-center gap-4">
+          <div
+            className="flex-1 min-h-0 overflow-y-auto px-6 py-10 flex flex-col items-center text-center gap-4"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center">
               <CheckCircle2 size={32} className="text-emerald-500" />
             </div>
@@ -105,8 +113,8 @@ export default function RentModal({ item, onClose }) {
           </div>
         ) : (
           <>
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+            {/* Modal header (pinned at top) */}
+            <div className="flex-shrink-0 flex items-center justify-between px-5 sm:px-6 pt-5 pb-3.5 sm:pt-6 sm:pb-4 border-b border-gray-100 bg-white z-10">
               <div>
                 <h3 className="font-sans text-[#1a1812] font-semibold text-base">
                   Rent this Item
@@ -116,148 +124,158 @@ export default function RentModal({ item, onClose }) {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={onClose}
-                className="text-[#8a7e70] hover:text-[#1a1812] transition-colors"
+                className="p-1 -mr-1 text-[#8a7e70] hover:text-[#1a1812] transition-colors"
                 aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Item preview */}
-            <div className="flex items-center gap-4 px-6 py-4 bg-[#faf8f3] border-b border-gray-100">
-              <img
-                src={item.image_url || item.image || `https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&q=80`}
-                alt={item.name}
-                className="w-16 h-20 object-cover rounded-sm flex-shrink-0"
-              />
-              <div>
-                <p className="font-sans text-[#1a1812] font-medium text-sm">{item.name}</p>
-                <p className="text-[#c9a97a] text-xs mt-1">
-                  {item.rental_price_per_day
-                    ? `From RWF ${Number(item.rental_price_per_day).toLocaleString()}/Day`
-                    : item.price}
-                </p>
-                {item.size && (
-                  <span className="text-[#8a7e70] text-[0.6rem] uppercase mt-1 block tracking-widest">
-                    Size {item.size}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Error banner */}
-            {error && (
-              <div className="mx-6 mt-4 flex items-start gap-2 bg-red-50 border border-red-100 rounded px-3 py-2.5">
-                <AlertCircle size={13} className="text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-red-600 text-xs leading-snug">{error}</p>
-              </div>
-            )}
-
-            {/* Form */}
-            <form className="px-6 py-5 space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
-                  Full Name *
-                </label>
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. Jean-Pierre Uwimana"
-                  value={form.name}
-                  onChange={(e) => set('name', e.target.value)}
-                  className="w-full border border-gray-200 px-3 py-2.5 text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm"
+            {/* Scrollable Modal Body */}
+            <div
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain modal-scroll"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+              }}
+            >
+              {/* Item preview */}
+              <div className="flex items-center gap-3.5 sm:gap-4 px-5 sm:px-6 py-3.5 sm:py-4 bg-[#faf8f3] border-b border-gray-100">
+                <img
+                  src={item.image_url || item.image || `https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&q=80`}
+                  alt={item.name}
+                  className="w-14 h-18 sm:w-16 sm:h-20 object-cover rounded-sm flex-shrink-0"
                 />
-              </div>
-
-              <div>
-                <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
-                  Phone / WhatsApp *
-                </label>
-                <input
-                  required
-                  type="tel"
-                  placeholder="+250 7XX XXX XXX"
-                  value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
-                  className="w-full border border-gray-200 px-3 py-2.5 text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
-                  Email (optional)
-                </label>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
-                  className="w-full border border-gray-200 px-3 py-2.5 text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
-                    Event Date
-                  </label>
-                  <input
-                    type="date"
-                    value={form.eventDate}
-                    onChange={(e) => set('eventDate', e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2.5 text-sm font-light text-[#1a1812] focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
-                    Rental Days
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.rentalDays}
-                    onChange={(e) => set('rentalDays', e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2.5 text-sm font-light text-[#1a1812] focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm"
-                  />
+                <div className="min-w-0 flex-1">
+                  <p className="font-sans text-[#1a1812] font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-[#c9a97a] text-xs mt-1 font-medium">
+                    {item.rental_price_per_day
+                      ? `From RWF ${Number(item.rental_price_per_day).toLocaleString()}/Day`
+                      : item.price}
+                  </p>
+                  {item.size && (
+                    <span className="text-[#8a7e70] text-[0.6rem] uppercase mt-1 block tracking-widest">
+                      Size {item.size}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Live price preview */}
-              {item.rental_price_per_day && (
-                <div className="flex items-center justify-between bg-[#faf8f3] border border-gray-100 rounded-sm px-4 py-3">
-                  <span className="text-[#8a7e70] text-xs uppercase tracking-wide font-medium">Estimated Total</span>
-                  <span className="text-[#1a1812] text-sm font-semibold">
-                    RWF {(Math.max(1, parseInt(form.rentalDays) || 1) * Number(item.rental_price_per_day)).toLocaleString()}
-                  </span>
+              {/* Error banner */}
+              {error && (
+                <div className="mx-5 sm:mx-6 mt-4 flex items-start gap-2 bg-red-50 border border-red-100 rounded px-3 py-2.5">
+                  <AlertCircle size={13} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-600 text-xs leading-snug">{error}</p>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={submitting}
-                  className="flex-1 border border-gray-200 text-[#8a7e70] text-xs tracking-widest uppercase font-medium py-3 hover:border-[#c9a97a] hover:text-[#c9a97a] transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 bg-[#1a1812] text-white text-xs tracking-widest uppercase font-medium py-3 hover:bg-[#c9a97a] hover:text-[#1a1812] transition-colors flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 size={12} className="animate-spin" />
-                      Sending…
-                    </>
-                  ) : (
-                    'Confirm Reservation'
-                  )}
-                </button>
-              </div>
-            </form>
+              {/* Form */}
+              <form className="px-5 sm:px-6 py-4 sm:py-5 space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
+                <div>
+                  <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
+                    Full Name *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. Jean-Pierre Uwimana"
+                    value={form.name}
+                    onChange={(e) => set('name', e.target.value)}
+                    className="w-full border border-gray-200 px-3 py-2.5 text-base sm:text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
+                    Phone / WhatsApp *
+                  </label>
+                  <input
+                    required
+                    type="tel"
+                    placeholder="+250 7XX XXX XXX"
+                    value={form.phone}
+                    onChange={(e) => set('phone', e.target.value)}
+                    className="w-full border border-gray-200 px-3 py-2.5 text-base sm:text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
+                    Email (optional)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={form.email}
+                    onChange={(e) => set('email', e.target.value)}
+                    className="w-full border border-gray-200 px-3 py-2.5 text-base sm:text-sm font-light text-[#1a1812] placeholder-gray-300 focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
+                      Event Date
+                    </label>
+                    <input
+                      type="date"
+                      value={form.eventDate}
+                      onChange={(e) => set('eventDate', e.target.value)}
+                      className="w-full min-h-[42px] border border-gray-200 px-3 py-2 text-base sm:text-sm font-light text-[#1a1812] focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#1a1812] text-xs font-medium mb-1.5 tracking-wide uppercase">
+                      Rental Days
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.rentalDays}
+                      onChange={(e) => set('rentalDays', e.target.value)}
+                      className="w-full min-h-[42px] border border-gray-200 px-3 py-2 text-base sm:text-sm font-light text-[#1a1812] focus:outline-none focus:border-[#c9a97a] transition-colors rounded-sm bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Live price preview */}
+                {item.rental_price_per_day && (
+                  <div className="flex items-center justify-between bg-[#faf8f3] border border-gray-100 rounded-sm px-4 py-3">
+                    <span className="text-[#8a7e70] text-xs uppercase tracking-wide font-medium">Estimated Total</span>
+                    <span className="text-[#1a1812] text-sm font-semibold">
+                      RWF {(Math.max(1, parseInt(form.rentalDays) || 1) * Number(item.rental_price_per_day)).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2 pb-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={submitting}
+                    className="flex-1 border border-gray-200 text-[#8a7e70] text-xs tracking-widest uppercase font-medium py-3 hover:border-[#c9a97a] hover:text-[#c9a97a] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-[#1a1812] text-white text-xs tracking-widest uppercase font-medium py-3 hover:bg-[#c9a97a] hover:text-[#1a1812] transition-colors flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        Sending…
+                      </>
+                    ) : (
+                      'Confirm Reservation'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </>
         )}
       </div>
@@ -266,6 +284,19 @@ export default function RentModal({ item, onClose }) {
         @keyframes fadeInScale {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+          background: #e2d9cd;
+          border-radius: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb:hover {
+          background: #c9a97a;
         }
       `}</style>
     </div>
