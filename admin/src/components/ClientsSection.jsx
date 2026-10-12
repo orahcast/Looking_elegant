@@ -71,19 +71,19 @@ export default function ClientsSection({
 
   const handleFormSubmit = (e) => {
     e.preventDefault()
-    if (!fullName.trim() || !idNumber.trim() || !phoneNumber.trim()) {
-      alert('Please fill in Client Name, National ID / Passport, and Phone Number.')
+    if (!fullName.trim() || !phoneNumber.trim()) {
+      alert('Please fill in Client Full Name and Telephone Number.')
       return
     }
 
     const payload = {
       id: editingClient ? editingClient.id : `cli-${Date.now()}`,
       full_name: fullName.trim(),
-      id_number: idNumber.trim(),
+      id_number: idNumber.trim() || '',
       phone_number: phoneNumber.trim(),
-      items_taken: itemsTaken.trim() || 'Rental Outfit',
-      return_due: returnDue,
-      status: status,
+      items_taken: itemsTaken.trim() || '',
+      return_due: returnDue || null,
+      status: status || 'active_rental',
       // System automatically detects and records current timestamp
       recorded_at: editingClient?.recorded_at || new Date().toISOString(),
     }
@@ -279,9 +279,13 @@ export default function ClientsSection({
                       </a>
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-[var(--bg-surface-subtle)] border border-[var(--border-color)] rounded text-[var(--text-main)]">
-                        {client.id_number}
-                      </span>
+                      {client.id_number ? (
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-[var(--bg-surface-subtle)] border border-[var(--border-color)] rounded text-[var(--text-main)]">
+                          {client.id_number}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--text-subtle)]">—</span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 max-w-[240px]">
                       <div className="font-medium text-xs truncate" title={client.items_taken}>
@@ -409,27 +413,25 @@ export default function ClientsSection({
                 </div>
                 <div>
                   <label className="block text-[0.7rem] uppercase font-bold text-[var(--text-muted)] mb-1">
-                    National ID / Passport Number *
+                    National ID / Passport Number
                   </label>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. 1 1988 8 0039281 0 45"
                     value={idNumber}
                     onChange={e => setIdNumber(e.target.value)}
                     className="w-full px-3 py-2.5 font-mono bg-[var(--bg-app)] border border-[var(--border-color)] rounded-lg text-[var(--text-main)] focus:outline-none focus:border-[var(--gold-primary)]"
                   />
-                  <span className="text-[0.65rem] text-[var(--text-subtle)] block mt-0.5">National ID (16 digits) or Passport</span>
+                  <span className="text-[0.65rem] text-[var(--text-subtle)] block mt-0.5">National ID (16 digits) or Passport (Optional)</span>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[0.7rem] uppercase font-bold text-[var(--text-muted)] mb-1">
-                  Outfit / Pieces Taken *
+                  Outfit / Pieces Taken
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Ivory Peak Tuxedo (40R) + Bowtie"
                   value={itemsTaken}
                   onChange={e => setItemsTaken(e.target.value)}
@@ -526,13 +528,13 @@ export default function ClientsSection({
                 </div>
                 <div>
                   <span className="text-[0.68rem] uppercase font-bold text-[var(--text-subtle)] block">National ID / Passport</span>
-                  <span className="font-mono font-bold text-[var(--text-main)] block mt-0.5">{selectedClientView.id_number}</span>
+                  <span className="font-mono font-bold text-[var(--text-main)] block mt-0.5">{selectedClientView.id_number || '—'}</span>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-[var(--border-color)]/50">
                 <span className="text-[0.68rem] uppercase font-bold text-[var(--text-subtle)] block">Outfit Taken</span>
-                <span className="font-semibold text-[var(--text-main)] block mt-0.5">{selectedClientView.items_taken}</span>
+                <span className="font-semibold text-[var(--text-main)] block mt-0.5">{selectedClientView.items_taken || '—'}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--border-color)]/50">
