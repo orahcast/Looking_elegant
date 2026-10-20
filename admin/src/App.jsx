@@ -194,7 +194,7 @@ export default function App() {
         />
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-[var(--bg-app)]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] space-y-6 bg-[var(--bg-app)]">
 
           {/* ─── Dashboard section ─────────────────────────────────────── */}
           {activeSection === 'dashboard' && (

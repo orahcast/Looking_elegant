@@ -50,6 +50,29 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* ── iOS Safe Area Inset Support (iPhone Dynamic Island / Notch) ── */
+.admin-header {
+  padding-top: 0.875rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.875rem);
+}
+
+.admin-sidebar-header {
+  padding-top: 1.25rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* Standalone PWA on iOS (iPhone 14 Pro, 15, 15 Pro, 16 with Dynamic Island) */
+  @media all and (display-mode: standalone) {
+    .admin-header {
+      padding-top: max(3.5rem, calc(env(safe-area-inset-top, 0px) + 0.875rem));
+    }
+    .admin-sidebar-header {
+      padding-top: max(3.5rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
+    }
+  }
+}
+
 /* ── Scrollbar ────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-surface-subtle); }

@@ -3,18 +3,22 @@ import { useInventory } from '../hooks/useInventory'
 
 // ── Category → badge label map ───────────────────────────────────────────────
 const BADGE_MAP = {
-  Suit:      'Tailored Fit',
-  Tuxedo:    'Black Tie Fit',
-  Blazer:    'Bespoke Cut',
-  Shoes:     'Hand-Polished',
-  Shoe:      'Hand-Polished',
-  Accessory: 'Atelier Acc.',
+  Suit:          "Men's Tailored Fit",
+  'Men Suit':    "Men's Tailored Fit",
+  'Women Suit':  "Women's Couture Fit",
+  'Women Suits': "Women's Couture Fit",
+  Tuxedo:        'Black Tie Fit',
+  Blazer:        'Bespoke Cut',
+  Shoes:         'Hand-Polished',
+  Shoe:          'Hand-Polished',
+  Accessory:     'Atelier Acc.',
 }
 
 // ── Category definitions ────────────────────────────────────────────────────
 const CATEGORIES = [
   { key: 'all', label: 'All Pieces' },
-  { key: 'suit', label: 'Suits' },
+  { key: 'men_suit', label: "Men's Suits" },
+  { key: 'women_suit', label: "Women's Suits" },
   { key: 'tuxedo', label: 'Tuxedos' },
   { key: 'blazer', label: 'Blazers' },
   { key: 'shoes', label: 'Shoes' },
@@ -52,7 +56,8 @@ export default function Collection({ onRent }) {
     const counts = { all: items.length }
     items.forEach((item) => {
       const cat = (item.category || '').toLowerCase()
-      if (cat.includes('suit') && !cat.includes('tux')) counts.suit = (counts.suit || 0) + 1
+      if (cat.includes('women')) counts.women_suit = (counts.women_suit || 0) + 1
+      else if (cat.includes('suit') && !cat.includes('tux')) counts.men_suit = (counts.men_suit || 0) + 1
       else if (cat.includes('tux')) counts.tuxedo = (counts.tuxedo || 0) + 1
       else if (cat.includes('blaz')) counts.blazer = (counts.blazer || 0) + 1
       else if (cat.includes('shoe')) counts.shoes = (counts.shoes || 0) + 1
@@ -67,7 +72,10 @@ export default function Collection({ onRent }) {
     if (selectedCategory === 'all') return items
     return items.filter((item) => {
       const cat = (item.category || '').toLowerCase()
-      if (selectedCategory === 'suit') return cat.includes('suit') && !cat.includes('tux')
+      if (selectedCategory === 'women_suit') return cat.includes('women')
+      if (selectedCategory === 'men_suit' || selectedCategory === 'suit') {
+        return cat.includes('suit') && !cat.includes('women') && !cat.includes('tux')
+      }
       if (selectedCategory === 'tuxedo') return cat.includes('tux')
       if (selectedCategory === 'blazer') return cat.includes('blaz')
       if (selectedCategory === 'shoes') return cat.includes('shoe')
@@ -227,7 +235,7 @@ export default function Collection({ onRent }) {
 
                   <div className="flex items-center justify-between pt-1 border-t border-gray-50">
                     <span className="text-[#8a7e70] text-[0.55rem] tracking-wider uppercase font-medium truncate max-w-[85px] sm:max-w-none">
-                      {BADGE_MAP[item.category] || item.category || 'Atelier'}
+                      {BADGE_MAP[item.category] || ((item.category || '').toLowerCase().includes('women') ? "Women's Couture Fit" : (item.category || '').toLowerCase().includes('suit') ? "Men's Tailored Fit" : item.category) || 'Atelier'}
                     </span>
                     <button
                       className="btn-rent text-[0.55rem] sm:text-[0.62rem] px-2.5 sm:px-3 py-1 sm:py-1.5"

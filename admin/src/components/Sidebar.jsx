@@ -62,7 +62,7 @@ export default function Sidebar({
         `}
       >
         {/* Brand */}
-        <div className="flex items-center justify-between px-5 py-6 border-b border-[var(--border-color)]">
+        <div className="admin-sidebar-header flex items-center justify-between px-5 pb-5 border-b border-[var(--border-color)]">
           <button 
             type="button" 
             onClick={() => { handleNavigate('dashboard'); handleClose(); }} 

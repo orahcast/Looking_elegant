@@ -8,7 +8,7 @@
 CREATE TABLE IF NOT EXISTS inventory (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  TEXT NOT NULL,
-  category              TEXT NOT NULL CHECK (category IN ('Suit', 'Tuxedo', 'Shoes', 'Accessory')),
+  category              TEXT NOT NULL CHECK (category IN ('Suit', 'Men Suit', 'Women Suit', 'Women Suits', 'Tuxedo', 'Blazer', 'Shoes', 'Accessory')),
   size                  TEXT NOT NULL,
   rental_price_per_day  INTEGER NOT NULL DEFAULT 0,
   status                TEXT NOT NULL DEFAULT 'available'

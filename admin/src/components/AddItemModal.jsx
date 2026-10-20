@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react'
 import { X, ImagePlus, Loader2, Check, Upload, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-const CATEGORIES = ['Suit', 'Tuxedo', 'Shoes', 'Accessory']
+const CATEGORY_OPTIONS = [
+  { value: 'Suit',        label: "Men's Suit" },
+  { value: 'Women Suit',  label: "Women's Suit" },
+  { value: 'Tuxedo',      label: 'Tuxedo' },
+  { value: 'Blazer',      label: 'Blazer' },
+  { value: 'Shoes',       label: 'Shoes' },
+  { value: 'Accessory',   label: 'Accessory' },
+]
+
 const STATUSES = [
   { value: 'available',    label: '🟢  Available' },
   { value: 'rented',       label: '🔵  Rented' },
@@ -11,7 +19,11 @@ const STATUSES = [
 
 const FALLBACK_IMAGES = {
   Suit: 'https://images.unsplash.com/photo-1594938298603-c8148c4b5d8e?w=400&q=80',
+  'Men Suit': 'https://images.unsplash.com/photo-1594938298603-c8148c4b5d8e?w=400&q=80',
+  'Women Suit': 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&q=80',
+  'Women Suits': 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&q=80',
   Tuxedo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80',
+  Blazer: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80',
   Shoes: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=400&q=80',
   Accessory: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&q=80',
 }
@@ -269,8 +281,8 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
                 onChange={(e) => set('category', e.target.value)}
                 required
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
             </div>
@@ -280,7 +292,15 @@ export default function AddItemModal({ onClose, onSave, itemToEdit = null }) {
                 id="item-size"
                 type="text"
                 className="field-input font-mono"
-                placeholder="e.g. 42R or 43"
+                placeholder={
+                  (form.category || '').toLowerCase().includes('women')
+                    ? 'e.g. 36/S, 38/M, 40/L'
+                    : (form.category || '').toLowerCase().includes('shoe')
+                    ? 'e.g. 41, 42, 43, 44'
+                    : (form.category || '').toLowerCase().includes('access')
+                    ? 'e.g. One Size'
+                    : 'e.g. 40R, 42R, 44L'
+                }
                 value={form.size}
                 onChange={(e) => set('size', e.target.value)}
                 required

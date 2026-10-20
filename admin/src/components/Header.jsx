@@ -21,7 +21,7 @@ export default function Header({
   const { title, subtitle } = pageTitles[activeSection] || pageTitles.dashboard
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-4 px-4 sm:px-6 py-3.5 bg-[var(--bg-surface)] backdrop-blur-md border-b border-[var(--border-color)] transition-colors duration-200">
+    <header className="admin-header sticky top-0 z-30 flex items-center gap-2.5 sm:gap-4 px-3 sm:px-6 pb-3.5 bg-[var(--bg-surface)] backdrop-blur-md border-b border-[var(--border-color)] transition-colors duration-200">
       {/* Mobile hamburger */}
       <button
         type="button"
@@ -61,7 +61,7 @@ export default function Header({
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         {/* Theme Toggle Button (Light / Dark Mode) */}
         <button
           type="button"
