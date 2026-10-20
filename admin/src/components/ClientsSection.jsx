@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { 
   BookOpen, Plus, Search, Edit, Trash2, Phone, User, 
-  Calendar, Clock, Download, Printer, Eye, X, Check, ChevronRight
+  Calendar, Clock, Download, Printer, Eye, X, Check, ChevronRight, FileText, Loader2
 } from 'lucide-react'
 
 export default function ClientsSection({
@@ -18,6 +18,7 @@ export default function ClientsSection({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingClient, setEditingClient] = useState(null)
   const [selectedClientView, setSelectedClientView] = useState(null)
+  const [exportingPdf, setExportingPdf] = useState(false)
 
   // Simplified Form Fields
   const [fullName, setFullName] = useState('')
@@ -98,31 +99,17 @@ export default function ClientsSection({
     setEditingClient(null)
   }
 
-  const handleExportCSV = () => {
-    if (clients.length === 0) {
-      alert('No client records to export.')
-      return
+  const handleExportPDF = async () => {
+    try {
+      setExportingPdf(true)
+      const { exportClientBookToPdf } = await import('../lib/exportClientBookPdf')
+      exportClientBookToPdf(clients)
+    } catch (err) {
+      console.error('PDF export error:', err)
+      alert('Failed to generate PDF: ' + err.message)
+    } finally {
+      setExportingPdf(false)
     }
-
-    const headers = ['Date & Time Logged', 'Client Name', 'Telephone', 'National ID / Passport', 'Outfit Taken', 'Return Due', 'Status']
-    const rows = clients.map(c => [
-      new Date(c.recorded_at || c.created_at || Date.now()).toLocaleString(),
-      `"${(c.full_name || '').replace(/"/g, '""')}"`,
-      `"${(c.phone_number || '').replace(/"/g, '""')}"`,
-      `"${(c.id_number || '').replace(/"/g, '""')}"`,
-      `"${(c.items_taken || '').replace(/"/g, '""')}"`,
-      c.return_due || '',
-      c.status || ''
-    ])
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `looking_elegant_client_book_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   return (
@@ -133,20 +120,23 @@ export default function ClientsSection({
           <div className="gold-divider" />
           <h1 className="font-editorial text-[var(--text-main)] text-2xl sm:text-3xl font-light tracking-wide flex items-center gap-2.5">
             <BookOpen className="text-[var(--gold-text)]" size={26} strokeWidth={1.8} />
-            On-Site Client Register (Digital Book)
+            Digital Book
           </h1>
-          <p className="text-[var(--text-muted)] text-[0.78rem] mt-1 tracking-wide font-medium">
-            Quickly record walk-in clients with their National ID, phone, outfit taken, and return schedule.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={handleExportCSV}
-            className="btn-secondary flex items-center gap-1.5 text-xs py-2 px-3"
-            title="Download CSV for official records"
+            onClick={handleExportPDF}
+            disabled={exportingPdf}
+            className="btn-secondary flex items-center gap-1.5 text-xs py-2 px-3 hover:border-[var(--gold-primary)] transition-all cursor-pointer disabled:opacity-50"
+            title="Download official PDF report for records"
           >
-            <Download size={14} /> Export Book
+            {exportingPdf ? (
+              <Loader2 size={14} className="animate-spin text-[var(--gold-text)]" />
+            ) : (
+              <FileText size={14} className="text-[var(--gold-text)]" />
+            )}
+            {exportingPdf ? 'Generating PDF...' : 'Export PDF'}
           </button>
           <button
             onClick={handleOpenAdd}

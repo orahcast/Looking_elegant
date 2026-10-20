@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [
@@ -34,7 +38,22 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      canvg: path.resolve(__dirname, 'src/lib/empty.js'),
+      html2canvas: path.resolve(__dirname, 'src/lib/empty.js'),
+      dompurify: path.resolve(__dirname, 'src/lib/empty.js'),
+    },
+  },
+  optimizeDeps: {
+    exclude: ['canvg', 'html2canvas', 'dompurify'],
+  },
   server: {
     port: 5174,
+  },
+  build: {
+    rollupOptions: {
+      external: ['canvg', 'html2canvas', 'dompurify', /^core-js/],
+    },
   },
 })

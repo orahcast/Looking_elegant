@@ -3,7 +3,7 @@ import { Menu, Bell, Search, RefreshCw, Sun, Moon } from 'lucide-react'
 const pageTitles = {
   dashboard: { title: 'Dashboard', subtitle: "Welcome back — here's your boutique overview at a glance." },
   orders:    { title: 'Web Orders', subtitle: 'Manage online rental orders, chosen outfits and delivery statuses.' },
-  clients:   { title: 'Client Book', subtitle: 'Digital on-site register for walk-in boutique clients and fittings.' },
+  clients:   { title: 'Digital Book', subtitle: 'On-site records for walk-in boutique clients and fittings.' },
   inventory: { title: 'Inventory', subtitle: 'Manage your full rental catalog in real time.' },
   settings:  { title: 'Settings',  subtitle: 'Configure your store preferences.' },
 }

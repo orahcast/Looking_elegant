@@ -36,7 +36,7 @@ export default function Sidebar({
   const navLinks = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders', label: 'Web Orders', icon: ShoppingBag, badge: pendingOrders, badgeType: 'alert' },
-    { id: 'clients', label: 'Client Book', icon: BookOpen, badge: totalClients, badgeType: 'normal' },
+    { id: 'clients', label: 'Digital Book', icon: BookOpen, badge: totalClients, badgeType: 'normal' },
     { id: 'inventory', label: 'Inventory', icon: Package, badge: itemsTotal, badgeType: 'normal' },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
